@@ -58,6 +58,39 @@ Aperture Player is a **free, open-source, ad-free mobile media player** built wi
 
 ---
 
+## 📱 Custom Dev Client Builds (EAS)
+
+Aperture Player utilizes **libVLC** and custom native modules. Because native code is required, development takes place inside an Expo Custom Dev Client build rather than standard Expo Go.
+
+### Steps to Produce the First Android Development Build:
+
+1. **Install EAS CLI & Authenticate:**
+   ```bash
+   npm install -g eas-cli
+   eas login
+   ```
+
+2. **Initialize Expo Project Link (first time only):**
+   ```bash
+   eas project:init
+   ```
+
+3. **Run the EAS Development Build:**
+   ```bash
+   eas build --profile development --platform android
+   ```
+
+4. **Install & Run on Device/Emulator:**
+   - EAS will compile the Android app in the cloud and generate a downloadable `.apk` link & QR code.
+   - Install the resulting APK on your physical Android device or drag-and-drop onto an Android Emulator.
+   - Start the local JavaScript Metro bundler:
+     ```bash
+     npx expo start --dev-client
+     ```
+   - Connect the app to your local bundler by scanning the QR code or selecting the local server link in the dev client launcher.
+
+---
+
 ## 📄 License
 
 This project is licensed under the [GNU General Public License v3 (GPLv3)](LICENSE).
