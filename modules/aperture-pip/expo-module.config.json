@@ -1,0 +1,4 @@
+{
+  "name": "aperture-pip",
+  "platforms": ["android", "ios"]
+}
