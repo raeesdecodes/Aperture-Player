@@ -111,6 +111,25 @@ jest.mock('@expo/vector-icons', () => {
 });
 
 jest.mock(
+  'expo-screen-orientation',
+  () => ({
+    unlockAsync: jest.fn(async () => {}),
+    lockAsync: jest.fn(async () => {}),
+    OrientationLock: { PORTRAIT_UP: 'PORTRAIT_UP' },
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  './modules/aperture-pip',
+  () => ({
+    isPipSupported: jest.fn(async () => true),
+    enterPipMode: jest.fn(async () => true),
+  }),
+  { virtual: true },
+);
+
+jest.mock(
   'expo-sqlite',
   () => ({
     openDatabaseSync: jest.fn(() => ({
@@ -129,7 +148,7 @@ jest.mock(
     getPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
     requestPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
     getAssetsAsync: jest.fn(async () => ({ assets: [], endCursor: '', hasNextPage: false })),
-    MediaType: { VIDEO: 'video', AUDIO: 'audio' },
+    MediaType: { VIDEO: 'video', AUDIO: 'audio', PHOTO: 'photo' },
   }),
   { virtual: true },
 );

@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, Alert } from 'react-native';
 import { VLCPlayer } from 'react-native-vlc-media-player';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { usePlayerStore } from '../../../store/usePlayerStore';
 import { vlcPlayerService } from '../../../data/services/vlcPlayerService';
+import { pipService } from '../../../data/services/pipService';
 
 import GestureLayer from '../components/GestureLayer';
 import VolumeBrightnessIndicator from '../components/VolumeBrightnessIndicator';
@@ -20,11 +22,11 @@ interface PlayerScreenProps {
   onBack?: () => void;
 }
 
-const DEFAULT_SAMPLE_URI =
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+const FIT_MODES = ['Fit', 'Fill', 'Crop', 'Stretch', '100%'];
+const DECODER_MODES = ['HW', 'HW+', 'SW'] as const;
 
 export default function PlayerScreen({
-  uri = DEFAULT_SAMPLE_URI,
+  uri = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
   title = 'Big Buck Bunny',
   onBack,
 }: PlayerScreenProps) {
@@ -36,6 +38,21 @@ export default function PlayerScreen({
   const [subModalVisible, setSubModalVisible] = useState(false);
   const [equalizerVisible, setEqualizerVisible] = useState(false);
   const [audioDelayVisible, setAudioDelayVisible] = useState(false);
+
+  const [fitIndex, setFitIndex] = useState(0);
+  const [decoderIndex, setDecoderIndex] = useState(0);
+
+  // Unlock auto-rotation on screen mount
+  useEffect(() => {
+    ScreenOrientation.unlockAsync().catch((err) =>
+      console.warn('ScreenOrientation unlock error:', err),
+    );
+
+    return () => {
+      // Lock back to portrait when leaving player
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+    };
+  }, []);
 
   useEffect(() => {
     open(uri);
@@ -81,6 +98,18 @@ export default function PlayerScreen({
     vlcPlayerService.handleEndReached();
   };
 
+  const handleCycleFitMode = () => {
+    setFitIndex((prev) => (prev + 1) % FIT_MODES.length);
+  };
+
+  const handleToggleDecoder = () => {
+    setDecoderIndex((prev) => (prev + 1) % DECODER_MODES.length);
+  };
+
+  const handleEnterPip = () => {
+    pipService.enterPip();
+  };
+
   if (equalizerVisible) {
     return <EqualizerScreen onBack={() => setEqualizerVisible(false)} />;
   }
@@ -106,6 +135,13 @@ export default function PlayerScreen({
           title={title}
           onBack={onBack}
           onMoreOptions={() => setOptionsVisible(true)}
+          onOpenAudioTracks={() => Alert.alert('Audio Tracks', 'Stream 1: English (AAC 5.1)')}
+          onOpenSubtitles={() => setSubModalVisible(true)}
+          decoderMode={DECODER_MODES[decoderIndex]}
+          onToggleDecoder={handleToggleDecoder}
+          fitMode={FIT_MODES[fitIndex]}
+          onCycleFitMode={handleCycleFitMode}
+          onEnterPip={handleEnterPip}
         />
         <LockScreenButton />
       </GestureLayer>
@@ -140,8 +176,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   video: {
-    width,
-    height,
+    width: '100%',
+    height: '100%',
     position: 'absolute',
   },
 });

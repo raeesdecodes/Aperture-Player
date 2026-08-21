@@ -4,7 +4,6 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   withTiming,
-  runOnJS,
 } from 'react-native-reanimated';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,8 +15,13 @@ interface PlayerControlsOverlayProps {
   title?: string;
   onBack?: () => void;
   onMoreOptions?: () => void;
-  onLockToggle?: () => void;
-  isLocked?: boolean;
+  onOpenAudioTracks?: () => void;
+  onOpenSubtitles?: () => void;
+  decoderMode?: 'HW' | 'HW+' | 'SW';
+  onToggleDecoder?: () => void;
+  fitMode?: string;
+  onCycleFitMode?: () => void;
+  onEnterPip?: () => void;
 }
 
 function formatTime(ms: number): string {
@@ -28,15 +32,19 @@ function formatTime(ms: number): string {
 }
 
 export default function PlayerControlsOverlay({
-  title = 'Big Buck Bunny (Sample)',
+  title = 'Aperture Video Stream',
   onBack,
   onMoreOptions,
-  onLockToggle,
-  isLocked = false,
+  onOpenAudioTracks,
+  onOpenSubtitles,
+  decoderMode = 'HW',
+  onToggleDecoder,
+  fitMode = 'Fit',
+  onCycleFitMode,
+  onEnterPip,
 }: PlayerControlsOverlayProps) {
   const { playbackState, play, pause, seekRelative, service } = usePlayerStore();
   const { positionMs, durationMs, isPlaying, isBuffering } = playbackState;
-  const [isVisibleState, setIsVisibleState] = useState(true);
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const areControlsVisible = gestureState.areControlsVisible;
@@ -56,7 +64,6 @@ export default function PlayerControlsOverlay({
     };
   });
 
-  // Handle auto-hide after 3 seconds of inactivity
   const resetAutoHideTimer = () => {
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
@@ -99,30 +106,55 @@ export default function PlayerControlsOverlay({
           style={styles.iconButton}
           onPress={onBack}
           testID="back-button"
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Back to library"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="arrow-back" size={24} color="#F5F5F7" />
+          <Ionicons name="arrow-back" size={22} color="#F5F5F7" />
         </TouchableOpacity>
+
         <Text style={styles.titleText} numberOfLines={1} accessibilityRole="header">
           {title}
         </Text>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={onMoreOptions}
-          testID="more-options-button"
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="More player options"
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="ellipsis-vertical" size={20} color="#F5F5F7" />
-        </TouchableOpacity>
+
+        <View style={styles.topRightActions}>
+          {/* Audio Tracks Icon */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onOpenAudioTracks}
+            testID="audio-tracks-button"
+          >
+            <Ionicons name="musical-notes-outline" size={20} color="#F5F5F7" />
+          </TouchableOpacity>
+
+          {/* Subtitles Icon */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onOpenSubtitles}
+            testID="subtitles-button"
+          >
+            <Ionicons name="chatbox-ellipses-outline" size={20} color="#F5F5F7" />
+          </TouchableOpacity>
+
+          {/* HW/SW Decoder Mode Chip */}
+          <TouchableOpacity
+            style={styles.decoderChip}
+            onPress={onToggleDecoder}
+            testID="decoder-button"
+          >
+            <Text style={styles.decoderText}>{decoderMode}</Text>
+          </TouchableOpacity>
+
+          {/* Three Dots More Options */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onMoreOptions}
+            testID="more-options-button"
+          >
+            <Ionicons name="ellipsis-vertical" size={20} color="#F5F5F7" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Center Buffering / Play Indicator */}
+      {/* Center Buffering Indicator */}
       {isBuffering && (
         <View style={styles.centerContainer}>
           <Text style={styles.bufferingLabel}>Buffering...</Text>
@@ -132,22 +164,43 @@ export default function PlayerControlsOverlay({
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.timeRow}>
-          <Text style={styles.timeText} accessibilityLabel={`Current time ${formatTime(positionMs)} of ${formatTime(durationMs)}`}>
-            {formatTime(positionMs)} / {formatTime(durationMs)}
-          </Text>
+          {/* Left Lock Button */}
           <TouchableOpacity
             style={styles.lockButton}
             onPress={() => {
               gestureState.isLocked.value = true;
             }}
             testID="lock-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Lock screen controls"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="lock-open-outline" size={20} color="#F5F5F7" />
+            <Ionicons name="lock-closed-outline" size={18} color="#F5F5F7" style={styles.lockIcon} />
+            <Text style={styles.lockLabel}>Lock</Text>
           </TouchableOpacity>
+
+          <Text style={styles.timeText}>
+            {formatTime(positionMs)} / {formatTime(durationMs)}
+          </Text>
+
+          {/* Right Aspect Ratio Fit & PiP Controls */}
+          <View style={styles.bottomRightActions}>
+            <TouchableOpacity
+              style={styles.fitModeButton}
+              onPress={onCycleFitMode}
+              testID="fit-mode-button"
+            >
+              <Ionicons name="expand-outline" size={16} color="#5B8CFF" style={styles.fitIcon} />
+              <Text style={styles.fitModeText}>{fitMode}</Text>
+            </TouchableOpacity>
+
+            {onEnterPip && (
+              <TouchableOpacity
+                style={styles.pipButton}
+                onPress={onEnterPip}
+                testID="pip-button"
+              >
+                <Ionicons name="scan-outline" size={18} color="#F5F5F7" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <Slider
@@ -170,10 +223,6 @@ export default function PlayerControlsOverlay({
               useLibraryStore.getState().playPrevious();
             }}
             testID="play-prev-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Previous track"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-skip-back-outline" size={24} color="#F5F5F7" />
           </TouchableOpacity>
@@ -185,10 +234,6 @@ export default function PlayerControlsOverlay({
               seekRelative(-10000);
             }}
             testID="seek-back-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Seek backward 10 seconds"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-back-outline" size={22} color="#F5F5F7" />
           </TouchableOpacity>
@@ -197,10 +242,6 @@ export default function PlayerControlsOverlay({
             style={styles.playPauseButton}
             onPress={togglePlayPause}
             testID="play-pause-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel={isPlaying ? 'Pause video' : 'Play video'}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons
               name={isPlaying ? 'pause-circle' : 'play-circle'}
@@ -216,10 +257,6 @@ export default function PlayerControlsOverlay({
               seekRelative(10000);
             }}
             testID="seek-forward-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Seek forward 10 seconds"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-forward-outline" size={22} color="#F5F5F7" />
           </TouchableOpacity>
@@ -231,10 +268,6 @@ export default function PlayerControlsOverlay({
               useLibraryStore.getState().playNext();
             }}
             testID="play-next-button"
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Next track"
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-skip-forward-outline" size={24} color="#F5F5F7" />
           </TouchableOpacity>
@@ -257,22 +290,39 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 44,
+    paddingTop: 40,
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: 'rgba(14, 14, 16, 0.75)',
+    paddingBottom: 14,
+    backgroundColor: 'rgba(14, 14, 16, 0.85)',
   },
   titleText: {
     flex: 1,
     color: '#F5F5F7',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginHorizontal: 12,
+    marginHorizontal: 10,
+  },
+  topRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconButton: {
-    padding: 8,
-    borderRadius: 20,
+    padding: 6,
+    borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginLeft: 6,
+  },
+  decoderChip: {
+    backgroundColor: '#5B8CFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 6,
+  },
+  decoderText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
   },
   centerContainer: {
     alignSelf: 'center',
@@ -289,8 +339,8 @@ const styles = StyleSheet.create({
   bottomBar: {
     paddingHorizontal: 16,
     paddingBottom: 24,
-    paddingTop: 16,
-    backgroundColor: 'rgba(14, 14, 16, 0.75)',
+    paddingTop: 14,
+    backgroundColor: 'rgba(14, 14, 16, 0.85)',
   },
   timeRow: {
     flexDirection: 'row',
@@ -298,14 +348,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  lockButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 73, 92, 0.2)',
+    borderWidth: 1,
+    borderColor: '#FF495C',
+  },
+  lockIcon: {
+    marginRight: 4,
+  },
+  lockLabel: {
+    color: '#FF495C',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   timeText: {
     color: '#A0A0A8',
     fontSize: 13,
     fontVariant: ['tabular-nums'],
   },
-  lockButton: {
+  bottomRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fitModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(91, 140, 255, 0.2)',
+    marginRight: 6,
+  },
+  fitIcon: {
+    marginRight: 4,
+  },
+  fitModeText: {
+    color: '#5B8CFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  pipButton: {
     padding: 6,
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   slider: {
@@ -316,11 +405,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   seekButton: {
     padding: 8,
-    marginHorizontal: 20,
+    marginHorizontal: 16,
   },
   playPauseButton: {
     padding: 4,
