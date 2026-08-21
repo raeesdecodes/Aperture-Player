@@ -6,11 +6,13 @@ import { vlcPlayerService } from '../data/services/vlcPlayerService';
 export interface PlayerStore {
   playbackState: PlaybackState;
   service: PlayerService;
+  audioDelayMs: number;
   setPlayerService: (service: PlayerService) => void;
   open: (uri: string) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   seekRelative: (deltaMs: number) => Promise<void>;
+  setAudioDelay: (delayMs: number) => void;
 }
 
 let activeUnsubscribe: (() => void) | null = null;
@@ -38,6 +40,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
   return {
     playbackState: initialPlaybackState,
     service: vlcPlayerService,
+    audioDelayMs: 0,
 
     setPlayerService: (newService: PlayerService) => {
       subscribeToService(newService);
@@ -58,8 +61,14 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
 
     seekRelative: async (deltaMs: number) => {
       const { positionMs, durationMs } = get().playbackState;
-      const targetPosMs = Math.max(0, Math.min(positionMs + deltaMs, durationMs));
-      await get().service.seek(targetPosMs);
+      const targetMs = Math.max(0, Math.min(positionMs + deltaMs, durationMs));
+      await get().service.seek(targetMs);
+    },
+
+    setAudioDelay: (delayMs: number) => {
+      const clampedDelay = Math.max(-5000, Math.min(5000, delayMs));
+      set({ audioDelayMs: clampedDelay });
+      vlcPlayerService.setAudioDelay(clampedDelay);
     },
   };
 });

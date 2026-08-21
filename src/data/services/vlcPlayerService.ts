@@ -105,6 +105,25 @@ export class VlcPlayerService implements PlayerService {
     this.volume = clampedVolume;
   }
 
+  private audioDelayMs: number = 0;
+
+  /**
+   * Sets audio delay offset in milliseconds (positive = audio lags video, negative = audio leads video).
+   */
+  public setAudioDelay(delayMs: number): void {
+    this.audioDelayMs = delayMs;
+    if (this.vlcPlayerRef?.setAudioDelay) {
+      this.vlcPlayerRef.setAudioDelay(delayMs);
+    }
+  }
+
+  /**
+   * Gets current audio delay offset in milliseconds.
+   */
+  public getAudioDelay(): number {
+    return this.audioDelayMs;
+  }
+
   public setEqualizerEnabled(enabled: boolean): void {
     if (this.vlcPlayerRef?.setEqualizerEnabled) {
       this.vlcPlayerRef.setEqualizerEnabled(enabled);
