@@ -60,6 +60,12 @@ jest.mock('react-native-gesture-handler', () => {
         numberOfTaps: function () {
           return this;
         },
+        minPointers: function () {
+          return this;
+        },
+        maxPointers: function () {
+          return this;
+        },
         onEnd: function () {
           return this;
         },

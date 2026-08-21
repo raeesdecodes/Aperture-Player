@@ -15,6 +15,7 @@ export interface GestureState {
   gestureValue: SharedValue<number>;
   seekDeltaPreviewMs: SharedValue<number>;
   areControlsVisible: SharedValue<boolean>;
+  isLocked: SharedValue<boolean>;
 }
 
 export const gestureState: GestureState = {
@@ -22,6 +23,7 @@ export const gestureState: GestureState = {
   gestureValue: makeMutable<number>(0),
   seekDeltaPreviewMs: makeMutable<number>(0),
   areControlsVisible: makeMutable<boolean>(true),
+  isLocked: makeMutable<boolean>(false),
 };
 
 export const resetGestureState = () => {
@@ -30,4 +32,5 @@ export const resetGestureState = () => {
   gestureState.gestureValue.value = 0;
   gestureState.seekDeltaPreviewMs.value = 0;
   gestureState.areControlsVisible.value = true;
+  gestureState.isLocked.value = false;
 };

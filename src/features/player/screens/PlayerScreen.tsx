@@ -8,6 +8,7 @@ import GestureLayer from '../components/GestureLayer';
 import VolumeBrightnessIndicator from '../components/VolumeBrightnessIndicator';
 import SeekScrubOverlay from '../components/SeekScrubOverlay';
 import PlayerControlsOverlay from '../components/PlayerControlsOverlay';
+import LockScreenButton from '../components/LockScreenButton';
 
 interface PlayerScreenProps {
   uri?: string;
@@ -84,6 +85,7 @@ export default function PlayerScreen({
         <VolumeBrightnessIndicator />
         <SeekScrubOverlay />
         <PlayerControlsOverlay title={title} onBack={onBack} />
+        <LockScreenButton />
       </GestureLayer>
     </View>
   );

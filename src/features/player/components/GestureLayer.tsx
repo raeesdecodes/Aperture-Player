@@ -34,10 +34,23 @@ export default function GestureLayer({ children }: GestureLayerProps) {
   const width = layout.width || 1;
   const height = layout.height || 1;
 
+  // Two-Finger Tap Gesture (Toggles lock mode)
+  const twoFingerTapGesture = Gesture.Tap()
+    .numberOfTaps(1)
+    .minPointers(2)
+    .onEnd(() => {
+      'worklet';
+      gestureState.isLocked.value = !gestureState.isLocked.value;
+      if (!gestureState.isLocked.value) {
+        gestureState.areControlsVisible.value = true;
+      }
+    });
+
   // Left 25% Pan (Brightness)
   const leftPanGesture = Gesture.Pan()
     .onStart((e: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       if (e.x <= width * 0.25) {
         startGestureValue.value = gestureState.gestureValue.value;
         gestureState.activeGesture.value = 'brightness';
@@ -45,6 +58,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     })
     .onUpdate((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       const startX = e.x - e.translationX;
       if (startX <= width * 0.25) {
         const deltaYRatio = -e.translationY / height;
@@ -63,6 +77,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
   const rightPanGesture = Gesture.Pan()
     .onStart((e: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       if (e.x >= width * 0.75) {
         startGestureValue.value = gestureState.gestureValue.value;
         gestureState.activeGesture.value = 'volume';
@@ -70,6 +85,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     })
     .onUpdate((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       const startX = e.x - e.translationX;
       if (startX >= width * 0.75) {
         const deltaYRatio = -e.translationY / height;
@@ -88,6 +104,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
   const centerPanGesture = Gesture.Pan()
     .onStart((e: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       if (e.x > width * 0.25 && e.x < width * 0.75) {
         gestureState.activeGesture.value = 'seek';
         gestureState.seekDeltaPreviewMs.value = 0;
@@ -95,6 +112,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     })
     .onUpdate((e: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       const startX = e.x - e.translationX;
       if (startX > width * 0.25 && startX < width * 0.75) {
         gestureState.seekDeltaPreviewMs.value = e.translationX * 200;
@@ -119,6 +137,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     .numberOfTaps(1)
     .onEnd(() => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       gestureState.areControlsVisible.value = !gestureState.areControlsVisible.value;
     });
 
@@ -127,6 +146,7 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     .numberOfTaps(2)
     .onEnd((e: GestureStateChangeEvent<TapGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       const x = e.x;
       if (x < width / 3) {
         gestureState.activeGesture.value = 'doubleTapLeft';
@@ -141,11 +161,13 @@ export default function GestureLayer({ children }: GestureLayerProps) {
   const pinchGesture = Gesture.Pinch()
     .onStart((e: GestureStateChangeEvent<PinchGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       gestureState.activeGesture.value = 'zoom';
       gestureState.gestureValue.value = e.scale;
     })
     .onUpdate((e: GestureUpdateEvent<PinchGestureHandlerEventPayload>) => {
       'worklet';
+      if (gestureState.isLocked.value) return;
       gestureState.gestureValue.value = e.scale;
     })
     .onFinalize(() => {
@@ -155,10 +177,13 @@ export default function GestureLayer({ children }: GestureLayerProps) {
       }
     });
 
-  // Composed Gestures: Pinch simultaneous with Pan; DoubleTap exclusive with SingleTap & Pan
+  // Composed Gestures: TwoFingerTap takes priority, Pinch simultaneous with Pan; Taps exclusive with Pan
   const composedGestures = Gesture.Race(
-    pinchGesture,
-    Gesture.Exclusive(doubleTapGesture, singleTapGesture, panGesture),
+    twoFingerTapGesture,
+    Gesture.Race(
+      pinchGesture,
+      Gesture.Exclusive(doubleTapGesture, singleTapGesture, panGesture),
+    ),
   );
 
   return (
@@ -178,4 +203,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

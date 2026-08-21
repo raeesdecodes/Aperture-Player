@@ -39,15 +39,19 @@ export default function PlayerControlsOverlay({
   const autoHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const areControlsVisible = gestureState.areControlsVisible;
+  const isLockedShared = gestureState.isLocked;
 
   const opacity = useDerivedValue(() => {
+    if (isLockedShared.value) {
+      return withTiming(0, { duration: 200 });
+    }
     return areControlsVisible.value ? withTiming(1, { duration: 150 }) : withTiming(0, { duration: 200 });
   });
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
-      pointerEvents: areControlsVisible.value ? 'auto' : 'none',
+      pointerEvents: !isLockedShared.value && areControlsVisible.value ? 'auto' : 'none',
     };
   });
 
@@ -118,12 +122,14 @@ export default function PlayerControlsOverlay({
           <Text style={styles.timeText}>
             {formatTime(positionMs)} / {formatTime(durationMs)}
           </Text>
-          <TouchableOpacity style={styles.lockButton} onPress={onLockToggle} testID="lock-button">
-            <Ionicons
-              name={isLocked ? 'lock-closed-outline' : 'lock-open-outline'}
-              size={20}
-              color={isLocked ? '#5B8CFF' : '#F5F5F7'}
-            />
+          <TouchableOpacity
+            style={styles.lockButton}
+            onPress={() => {
+              gestureState.isLocked.value = true;
+            }}
+            testID="lock-button"
+          >
+            <Ionicons name="lock-open-outline" size={20} color="#F5F5F7" />
           </TouchableOpacity>
         </View>
 
