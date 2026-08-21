@@ -21,6 +21,12 @@ import NetworkStreamModal from '../../network/components/NetworkStreamModal';
 import PlaylistManagerModal from '../../playlists/components/PlaylistManagerModal';
 import StatusSaverModal from '../../statusSaver/components/StatusSaverModal';
 import RecycleBinModal from '../../recycleBin/components/RecycleBinModal';
+import MediaViewOptionsModal, {
+  ViewFilterMode,
+  LayoutType,
+  SortField,
+} from '../components/MediaViewOptionsModal';
+import ImageViewerModal from '../../imageViewer/screens/ImageViewerModal';
 import { MediaItemSchema } from '../../../data/db/schema/mediaItems';
 
 interface LibraryHomeScreenProps {
@@ -28,8 +34,6 @@ interface LibraryHomeScreenProps {
   onOpenSettings?: () => void;
   onOpenMusic?: () => void;
 }
-
-type SortBy = 'date' | 'name' | 'duration';
 
 export default function LibraryHomeScreen({
   onSelectMedia,
@@ -46,13 +50,26 @@ export default function LibraryHomeScreen({
   } = useLibraryStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [showSearchBar, setShowSearchBar] = useState(false);
 
+  // View Options state
+  const [viewFilterMode, setViewFilterMode] = useState<ViewFilterMode>('all');
+  const [layoutType, setLayoutType] = useState<LayoutType>('grid');
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortAscending, setSortAscending] = useState(false);
+  const [showHiddenFiles, setShowHiddenFiles] = useState(false);
+  const [displayLengthOnThumbnail, setDisplayLengthOnThumbnail] = useState(true);
+
+  // Modal states
+  const [viewOptionsVisible, setViewOptionsVisible] = useState(false);
   const [privateVaultVisible, setPrivateVaultVisible] = useState(false);
   const [urlStreamVisible, setUrlStreamVisible] = useState(false);
   const [playlistsVisible, setPlaylistsVisible] = useState(false);
   const [statusSaverVisible, setStatusSaverVisible] = useState(false);
   const [recycleBinVisible, setRecycleBinVisible] = useState(false);
+
+  // Image viewer state
+  const [selectedImage, setSelectedImage] = useState<MediaItemSchema | null>(null);
 
   useEffect(() => {
     fetchLibrary();
@@ -61,6 +78,17 @@ export default function LibraryHomeScreen({
   const filteredAndSortedMedia = useMemo(() => {
     let result = [...mediaItemsList];
 
+    // Hidden files filter
+    if (!showHiddenFiles) {
+      result = result.filter((item) => !item.filename.startsWith('.'));
+    }
+
+    // View filter mode
+    if (viewFilterMode === 'files') {
+      result = result.filter((item) => !item.mimeType?.includes('folder'));
+    }
+
+    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -69,20 +97,31 @@ export default function LibraryHomeScreen({
       );
     }
 
+    // Sort
     result.sort((a, b) => {
-      if (sortBy === 'name') {
-        return (a.title || a.filename).localeCompare(b.title || b.filename);
+      let comparison = 0;
+      if (sortField === 'name') {
+        comparison = (a.title || a.filename).localeCompare(b.title || b.filename);
+      } else if (sortField === 'duration') {
+        comparison = (a.durationMs || 0) - (b.durationMs || 0);
+      } else if (sortField === 'size') {
+        comparison = (a.sizeBytes || 0) - (b.sizeBytes || 0);
+      } else {
+        // date
+        comparison = (a.createdAt || 0) - (b.createdAt || 0);
       }
-      if (sortBy === 'duration') {
-        return (b.durationMs || 0) - (a.durationMs || 0);
-      }
-      return (b.createdAt || 0) - (a.createdAt || 0);
+      return sortAscending ? comparison : -comparison;
     });
 
     return result;
-  }, [mediaItemsList, searchQuery, sortBy]);
+  }, [mediaItemsList, searchQuery, viewFilterMode, sortField, sortAscending, showHiddenFiles]);
 
   const handlePressMedia = (item: MediaItemSchema) => {
+    if (item.mimeType?.startsWith('image/')) {
+      setSelectedImage(item);
+      return;
+    }
+
     const index = filteredAndSortedMedia.findIndex((m) => m.id === item.id);
     useLibraryStore.getState().setQueue(filteredAndSortedMedia, index >= 0 ? index : 0);
     if (onSelectMedia) {
@@ -110,20 +149,26 @@ export default function LibraryHomeScreen({
 
   const renderHeader = () => (
     <View>
+      {/* Top Header Row */}
       <View style={styles.headerRow}>
-        <View>
-          <Text style={styles.headerTitle}>Aperture Player</Text>
-          <Text style={styles.headerSubtitle}>
-            {filteredAndSortedMedia.length} {filteredAndSortedMedia.length === 1 ? 'file' : 'files'} in library
-          </Text>
-        </View>
+        <Text style={styles.headerTitle}>Aperture Player</Text>
 
         <View style={styles.headerRightActions}>
-          {onOpenSettings && (
-            <TouchableOpacity style={styles.settingsIconButton} onPress={onOpenSettings} testID="settings-button">
-              <Ionicons name="settings-outline" size={22} color="#F5F5F7" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => setShowSearchBar(!showSearchBar)}
+            testID="search-toggle-button"
+          >
+            <Ionicons name="search-outline" size={22} color="#F5F5F7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => setViewOptionsVisible(true)}
+            testID="view-options-button"
+          >
+            <Ionicons name="options-outline" size={22} color="#F5F5F7" />
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.scanButton}
@@ -165,40 +210,24 @@ export default function LibraryHomeScreen({
       />
 
       {/* Search Input Bar */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={18} color="#A0A0A8" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search media files..."
-          placeholderTextColor="#A0A0A8"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={18} color="#A0A0A8" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Sort Chips */}
-      <View style={styles.sortContainer}>
-        <Text style={styles.sortLabel}>Sort by:</Text>
-        {(['date', 'name', 'duration'] as SortBy[]).map((mode) => {
-          const isSelected = sortBy === mode;
-          return (
-            <TouchableOpacity
-              key={mode}
-              style={[styles.sortChip, isSelected && styles.sortChipActive]}
-              onPress={() => setSortBy(mode)}
-            >
-              <Text style={[styles.sortChipText, isSelected && styles.sortChipTextActive]}>
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </Text>
+      {showSearchBar && (
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={18} color="#A0A0A8" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search media files, photos, audio..."
+            placeholderTextColor="#A0A0A8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color="#A0A0A8" />
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          )}
+        </View>
+      )}
 
       {continueWatchingList.length > 0 && (
         <ContinueWatchingRow
@@ -207,7 +236,12 @@ export default function LibraryHomeScreen({
         />
       )}
 
-      {filteredAndSortedMedia.length > 0 && <Text style={styles.allMediaTitle}>All Media</Text>}
+      {filteredAndSortedMedia.length > 0 && (
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.allMediaTitle}>All Media Files</Text>
+          <Text style={styles.mediaCountBadge}>{filteredAndSortedMedia.length}</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -218,7 +252,7 @@ export default function LibraryHomeScreen({
       <Text style={styles.emptySubtitle}>
         {searchQuery
           ? 'No files matched your search filter.'
-          : 'Tap the Scan button to search your device for videos and audio files.'}
+          : 'Tap the Scan button to search your device for videos, photos, and audio files.'}
       </Text>
       {!searchQuery && (
         <TouchableOpacity style={styles.scanCtaButton} onPress={() => scanMedia()}>
@@ -232,14 +266,45 @@ export default function LibraryHomeScreen({
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0E0E10" />
       <FlatList
+        key={layoutType}
         data={filteredAndSortedMedia}
-        numColumns={2}
+        numColumns={layoutType === 'grid' ? 2 : 1}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={!isScanning ? renderEmptyState : null}
-        columnWrapperStyle={filteredAndSortedMedia.length > 0 ? styles.columnWrapper : undefined}
+        columnWrapperStyle={
+          layoutType === 'grid' && filteredAndSortedMedia.length > 0
+            ? styles.columnWrapper
+            : undefined
+        }
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => <MediaGridTile item={item} onPress={handlePressMedia} />}
+      />
+
+      {/* View Options Modal */}
+      <MediaViewOptionsModal
+        visible={viewOptionsVisible}
+        onClose={() => setViewOptionsVisible(false)}
+        viewFilterMode={viewFilterMode}
+        setViewFilterMode={setViewFilterMode}
+        layoutType={layoutType}
+        setLayoutType={setLayoutType}
+        sortField={sortField}
+        setSortField={setSortField}
+        sortAscending={sortAscending}
+        setSortAscending={setSortAscending}
+        showHiddenFiles={showHiddenFiles}
+        setShowHiddenFiles={setShowHiddenFiles}
+        displayLengthOnThumbnail={displayLengthOnThumbnail}
+        setDisplayLengthOnThumbnail={setDisplayLengthOnThumbnail}
+      />
+
+      {/* Photo Viewer Modal */}
+      <ImageViewerModal
+        visible={!!selectedImage}
+        imageUri={selectedImage?.uri || null}
+        title={selectedImage?.title || selectedImage?.filename}
+        onClose={() => setSelectedImage(null)}
       />
 
       {/* Tool Modals */}
@@ -290,22 +355,17 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#F5F5F7',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    color: '#A0A0A8',
-    fontSize: 13,
-    marginTop: 2,
   },
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  settingsIconButton: {
+  headerIconButton: {
     padding: 8,
-    marginRight: 8,
+    marginRight: 6,
   },
   scanButton: {
     flexDirection: 'row',
@@ -343,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1A1A1D',
     marginHorizontal: 16,
-    marginBottom: 10,
+    marginBottom: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
     height: 42,
@@ -358,44 +418,27 @@ const styles = StyleSheet.create({
     color: '#F5F5F7',
     fontSize: 14,
   },
-  sortContainer: {
+  sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  sortLabel: {
-    color: '#A0A0A8',
-    fontSize: 12,
-    marginRight: 8,
-  },
-  sortChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#1A1A1D',
-    marginRight: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  sortChipActive: {
-    backgroundColor: 'rgba(91, 140, 255, 0.2)',
-    borderColor: '#5B8CFF',
-  },
-  sortChipText: {
-    color: '#A0A0A8',
-    fontSize: 12,
-  },
-  sortChipTextActive: {
-    color: '#5B8CFF',
-    fontWeight: '700',
+    marginBottom: 14,
+    marginTop: 6,
   },
   allMediaTitle: {
     color: '#F5F5F7',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 14,
-    paddingHorizontal: 16,
+    marginRight: 8,
+  },
+  mediaCountBadge: {
+    color: '#5B8CFF',
+    fontSize: 13,
+    fontWeight: '700',
+    backgroundColor: 'rgba(91, 140, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
   },
   columnWrapper: {
     justifyContent: 'space-between',

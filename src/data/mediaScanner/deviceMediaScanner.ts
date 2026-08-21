@@ -34,7 +34,11 @@ export async function scanDeviceMedia(): Promise<ScanResult> {
 
   while (hasNextPage) {
     const page = await MediaLibrary.getAssetsAsync({
-      mediaType: [MediaLibrary.MediaType.VIDEO, MediaLibrary.MediaType.AUDIO],
+      mediaType: [
+        MediaLibrary.MediaType.VIDEO,
+        MediaLibrary.MediaType.AUDIO,
+        'photo' as any,
+      ],
       first: 100,
       after: afterCursor,
       sortBy: ['creationTime'],
@@ -51,6 +55,13 @@ export async function scanDeviceMedia(): Promise<ScanResult> {
         .where(eq(mediaItems.id, asset.id))
         .get();
 
+      let mimeType = 'video/mp4';
+      if (asset.mediaType === MediaLibrary.MediaType.AUDIO) {
+        mimeType = 'audio/mpeg';
+      } else if ((asset.mediaType as string) === 'photo') {
+        mimeType = 'image/jpeg';
+      }
+
       const itemValues = {
         id: asset.id,
         uri: asset.uri,
@@ -58,7 +69,7 @@ export async function scanDeviceMedia(): Promise<ScanResult> {
         title: asset.filename.substring(0, asset.filename.lastIndexOf('.')) || asset.filename,
         durationMs: Math.round(asset.duration * 1000),
         sizeBytes: 0,
-        mimeType: asset.mediaType === MediaLibrary.MediaType.VIDEO ? 'video/mp4' : 'audio/mpeg',
+        mimeType,
         createdAt: asset.creationTime || now,
         updatedAt: asset.modificationTime || now,
       };
