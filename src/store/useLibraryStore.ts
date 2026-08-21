@@ -3,6 +3,7 @@ import { db } from '../data/db/client';
 import { mediaItems, watchProgress } from '../data/db/schema';
 import { MediaItemSchema } from '../data/db/schema/mediaItems';
 import { scanDeviceMedia } from '../data/mediaScanner/deviceMediaScanner';
+import { generateMissingThumbnails } from '../data/mediaScanner/thumbnailGenerator';
 import { eq, gt, desc } from 'drizzle-orm';
 
 export interface WatchProgressItem {
@@ -70,6 +71,12 @@ export const useLibraryStore = create<LibraryStore>((set, get) => ({
       const { permissionGranted } = await scanDeviceMedia();
       set({ permissionGranted });
       await get().fetchLibrary();
+      // Background thumbnail generation
+      generateMissingThumbnails().then((count) => {
+        if (count > 0) {
+          get().fetchLibrary();
+        }
+      });
     } finally {
       set({ isScanning: false });
     }
