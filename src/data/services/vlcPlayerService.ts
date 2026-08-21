@@ -105,6 +105,18 @@ export class VlcPlayerService implements PlayerService {
     this.volume = clampedVolume;
   }
 
+  public setEqualizerEnabled(enabled: boolean): void {
+    if (this.vlcPlayerRef?.setEqualizerEnabled) {
+      this.vlcPlayerRef.setEqualizerEnabled(enabled);
+    }
+  }
+
+  public setEqualizerBands(gains: number[]): void {
+    if (this.vlcPlayerRef?.setEqualizerBands) {
+      this.vlcPlayerRef.setEqualizerBands(gains);
+    }
+  }
+
   public onPlaybackStateChange(callback: (state: PlaybackState) => void): () => void {
     this.listeners.add(callback);
     callback(this.state);
