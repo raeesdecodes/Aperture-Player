@@ -9,6 +9,7 @@ import Animated, {
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { usePlayerStore } from '../../../store/usePlayerStore';
+import { useLibraryStore } from '../../../store/useLibraryStore';
 import { gestureState } from '../../../store/useGestureStore';
 
 interface PlayerControlsOverlayProps {
@@ -150,10 +151,22 @@ export default function PlayerControlsOverlay({
             style={styles.seekButton}
             onPress={() => {
               resetAutoHideTimer();
+              useLibraryStore.getState().playPrevious();
+            }}
+            testID="play-prev-button"
+          >
+            <Ionicons name="play-skip-back-outline" size={24} color="#F5F5F7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.seekButton}
+            onPress={() => {
+              resetAutoHideTimer();
               seekRelative(-10000);
             }}
+            testID="seek-back-button"
           >
-            <Ionicons name="play-back-outline" size={24} color="#F5F5F7" />
+            <Ionicons name="play-back-outline" size={22} color="#F5F5F7" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -174,8 +187,20 @@ export default function PlayerControlsOverlay({
               resetAutoHideTimer();
               seekRelative(10000);
             }}
+            testID="seek-forward-button"
           >
-            <Ionicons name="play-forward-outline" size={24} color="#F5F5F7" />
+            <Ionicons name="play-forward-outline" size={22} color="#F5F5F7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.seekButton}
+            onPress={() => {
+              resetAutoHideTimer();
+              useLibraryStore.getState().playNext();
+            }}
+            testID="play-next-button"
+          >
+            <Ionicons name="play-skip-forward-outline" size={24} color="#F5F5F7" />
           </TouchableOpacity>
         </View>
       </View>

@@ -34,6 +34,8 @@ export default function LibraryHomeScreen({ onSelectMedia }: LibraryHomeScreenPr
   }, [fetchLibrary]);
 
   const handlePressMedia = (item: MediaItemSchema) => {
+    const index = mediaItemsList.findIndex((m) => m.id === item.id);
+    useLibraryStore.getState().setQueue(mediaItemsList, index >= 0 ? index : 0);
     if (onSelectMedia) {
       onSelectMedia(item);
     }

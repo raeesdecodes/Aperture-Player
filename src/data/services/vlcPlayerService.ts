@@ -1,6 +1,7 @@
 import { PlayerService } from '../../domain/interfaces/playerService';
 import { PlaybackState } from '../../domain/types/playbackState';
 import { detectLocalSubtitle } from './localSubtitleDetector';
+import { useLibraryStore } from '../../store/useLibraryStore';
 
 /**
  * Concrete implementation of PlayerService backed by react-native-vlc-media-player.
@@ -89,6 +90,11 @@ export class VlcPlayerService implements PlayerService {
 
   public async pause(): Promise<void> {
     this.updateState({ isPlaying: false });
+  }
+
+  public handleEndReached(): void {
+    this.updateState({ isPlaying: false });
+    useLibraryStore.getState().playNext();
   }
 
   public async seek(positionMs: number): Promise<void> {
