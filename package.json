@@ -9,7 +9,8 @@
     "jest-expo": "~57.0.4",
     "react": "19.2.3",
     "react-native": "0.86.2",
-    "react-native-vlc-media-player": "^1.0.98"
+    "react-native-vlc-media-player": "^1.0.98",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
