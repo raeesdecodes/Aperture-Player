@@ -9,10 +9,11 @@ import MusicHomeScreen from './src/features/library/screens/MusicHomeScreen';
 import MeScreen from './src/features/settings/screens/MeScreen';
 import SettingsScreen from './src/features/settings/screens/SettingsScreen';
 import PlayerScreen from './src/features/player/screens/PlayerScreen';
+import AudioPlayerScreen from './src/features/audioPlayer/screens/AudioPlayerScreen';
 import EqualizerScreen from './src/features/equalizer/screens/EqualizerScreen';
 import { MediaItemSchema } from './src/data/db/schema/mediaItems';
 
-type ViewMode = 'main' | 'player' | 'settings' | 'equalizer';
+type ViewMode = 'main' | 'player' | 'audioPlayer' | 'settings' | 'equalizer';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('local');
@@ -21,7 +22,14 @@ export default function App() {
 
   const handleSelectMedia = (item: MediaItemSchema) => {
     setSelectedMedia(item);
-    setViewMode('player');
+    if (
+      item.mimeType?.startsWith('audio') ||
+      item.filename.match(/\.(mp3|aac|flac|wav|ogg|m4a)$/i)
+    ) {
+      setViewMode('audioPlayer');
+    } else {
+      setViewMode('player');
+    }
   };
 
   return (
@@ -55,6 +63,14 @@ export default function App() {
         <PlayerScreen
           uri={selectedMedia?.uri}
           title={selectedMedia?.title || selectedMedia?.filename}
+          onBack={() => setViewMode('main')}
+        />
+      )}
+
+      {viewMode === 'audioPlayer' && (
+        <AudioPlayerScreen
+          title={selectedMedia?.title || selectedMedia?.filename}
+          artist="Local Storage Track"
           onBack={() => setViewMode('main')}
         />
       )}
