@@ -30,6 +30,7 @@ module.exports = {
       'react-native-vlc-media-player',
       'expo-sqlite',
       'react-native-track-player',
+      './plugins/withPipSupport',
       [
         'expo-media-library',
         {

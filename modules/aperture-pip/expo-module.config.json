@@ -1,4 +1,7 @@
 {
   "name": "aperture-pip",
-  "platforms": ["android", "ios"]
+  "platforms": ["android", "ios"],
+  "android": {
+    "package": "com.apertureplayer.pip"
+  }
 }

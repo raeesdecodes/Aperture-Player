@@ -1,0 +1,19 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+group = 'com.apertureplayer.pip'
+version = '1.0.0'
+
+android {
+  namespace "com.apertureplayer.pip"
+  compileSdkVersion 35
+  defaultConfig {
+    minSdkVersion 26
+    targetSdkVersion 35
+  }
+}
+
+dependencies {
+  implementation project(':expo-modules-core')
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
+}
