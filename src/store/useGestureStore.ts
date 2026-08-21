@@ -14,12 +14,14 @@ export interface GestureState {
   activeGesture: SharedValue<GestureType>;
   gestureValue: SharedValue<number>;
   seekDeltaPreviewMs: SharedValue<number>;
+  areControlsVisible: SharedValue<boolean>;
 }
 
 export const gestureState: GestureState = {
   activeGesture: makeMutable<GestureType>('none'),
   gestureValue: makeMutable<number>(0),
   seekDeltaPreviewMs: makeMutable<number>(0),
+  areControlsVisible: makeMutable<boolean>(true),
 };
 
 export const resetGestureState = () => {
@@ -27,4 +29,5 @@ export const resetGestureState = () => {
   gestureState.activeGesture.value = 'none';
   gestureState.gestureValue.value = 0;
   gestureState.seekDeltaPreviewMs.value = 0;
+  gestureState.areControlsVisible.value = true;
 };

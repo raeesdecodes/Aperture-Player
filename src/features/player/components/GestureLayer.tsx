@@ -114,6 +114,14 @@ export default function GestureLayer({ children }: GestureLayerProps) {
   // Composed Pan Gesture
   const panGesture = Gesture.Simultaneous(leftPanGesture, rightPanGesture, centerPanGesture);
 
+  // Single Tap Gesture
+  const singleTapGesture = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      'worklet';
+      gestureState.areControlsVisible.value = !gestureState.areControlsVisible.value;
+    });
+
   // Double Tap Gesture
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
@@ -147,10 +155,10 @@ export default function GestureLayer({ children }: GestureLayerProps) {
       }
     });
 
-  // Composed Gestures: Pinch simultaneous with Pan; DoubleTap exclusive with Pan
+  // Composed Gestures: Pinch simultaneous with Pan; DoubleTap exclusive with SingleTap & Pan
   const composedGestures = Gesture.Race(
     pinchGesture,
-    Gesture.Exclusive(doubleTapGesture, panGesture),
+    Gesture.Exclusive(doubleTapGesture, singleTapGesture, panGesture),
   );
 
   return (
