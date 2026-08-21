@@ -5,6 +5,8 @@ import Slider from '@react-native-community/slider';
 import { usePlayerStore } from '../../../store/usePlayerStore';
 import { vlcPlayerService } from '../../../data/services/vlcPlayerService';
 
+import GestureLayer from '../components/GestureLayer';
+
 interface PlayerScreenProps {
   uri?: string;
 }
@@ -79,17 +81,19 @@ export default function PlayerScreen({ uri = DEFAULT_SAMPLE_URI }: PlayerScreenP
 
   return (
     <View style={styles.container}>
-      <VLCPlayer
-        ref={handleRef}
-        style={styles.video}
-        source={{ uri }}
-        paused={!isPlaying}
-        onProgress={handleProgress}
-        onPlaying={handlePlaying}
-        onPaused={handlePaused}
-        onBuffering={handleBuffering}
-        autoplay={true}
-      />
+      <GestureLayer>
+        <VLCPlayer
+          ref={handleRef}
+          style={styles.video}
+          source={{ uri }}
+          paused={!isPlaying}
+          onProgress={handleProgress}
+          onPlaying={handlePlaying}
+          onPaused={handlePaused}
+          onBuffering={handleBuffering}
+          autoplay={true}
+        />
+      </GestureLayer>
 
       <View style={styles.controlsContainer}>
         <View style={styles.row}>

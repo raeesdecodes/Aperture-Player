@@ -145,8 +145,9 @@ aperture-player/
 ```
 
 ## Directory Rules of Thumb
+
 - **`src/domain/`** stays plain TypeScript — no `react-native`, no VLC bridge imports — keeps business logic testable and engine-swappable.
 - **`src/data/services/`** is the only place that talks to the native VLC bridge directly.
-- **`plugins/`** and **`modules/`** are the *only* places native/config concerns live — never edit generated `android/`/`ios/` output.
+- **`plugins/`** and **`modules/`** are the _only_ places native/config concerns live — never edit generated `android/`/`ios/` output.
 - Each feature under `src/features/<feature>/` owns its own `screens/`/`components/`; shared UI goes in `src/core/components/`.
 - Any change under `modules/` requires a new EAS dev-client build; changes elsewhere in `src/` hot-reload against the existing dev client.
