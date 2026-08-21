@@ -7,6 +7,7 @@ import { vlcPlayerService } from '../../../data/services/vlcPlayerService';
 
 import GestureLayer from '../components/GestureLayer';
 import VolumeBrightnessIndicator from '../components/VolumeBrightnessIndicator';
+import SeekScrubOverlay from '../components/SeekScrubOverlay';
 
 interface PlayerScreenProps {
   uri?: string;
@@ -95,6 +96,7 @@ export default function PlayerScreen({ uri = DEFAULT_SAMPLE_URI }: PlayerScreenP
           autoplay={true}
         />
         <VolumeBrightnessIndicator />
+        <SeekScrubOverlay />
       </GestureLayer>
 
       <View style={styles.controlsContainer}>

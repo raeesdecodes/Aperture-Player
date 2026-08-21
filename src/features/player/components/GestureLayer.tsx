@@ -9,12 +9,18 @@ import {
   TapGestureHandlerEventPayload,
   PinchGestureHandlerEventPayload,
 } from 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated';
+import { useSharedValue, runOnJS } from 'react-native-reanimated';
 import { gestureState } from '../../../store/useGestureStore';
+import { usePlayerStore } from '../../../store/usePlayerStore';
 
 interface GestureLayerProps {
   children?: React.ReactNode;
 }
+
+const triggerSeek = (deltaMs: number) => {
+  usePlayerStore.getState().seekRelative(deltaMs);
+  gestureState.seekDeltaPreviewMs.value = 0;
+};
 
 export default function GestureLayer({ children }: GestureLayerProps) {
   const [layout, setLayout] = useState({ width: 0, height: 0 });
@@ -97,6 +103,10 @@ export default function GestureLayer({ children }: GestureLayerProps) {
     .onFinalize(() => {
       'worklet';
       if (gestureState.activeGesture.value === 'seek') {
+        const finalDeltaMs = gestureState.seekDeltaPreviewMs.value;
+        if (finalDeltaMs !== 0) {
+          runOnJS(triggerSeek)(finalDeltaMs);
+        }
         gestureState.activeGesture.value = 'none';
       }
     });
