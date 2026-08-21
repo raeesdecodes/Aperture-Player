@@ -20,12 +20,18 @@ export default function ContinueWatchingRow({ items, onPressItem }: ContinueWatc
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.mediaItem.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => onPressItem(item)}
-            activeOpacity={0.8}
-          >
+        renderItem={({ item }) => {
+          const progressLabel = `Resume watching ${item.mediaItem.title || item.mediaItem.filename}, ${Math.round(item.progressPercent)}% watched`;
+          return (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => onPressItem(item)}
+              activeOpacity={0.8}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={progressLabel}
+              accessibilityHint="Double tap to resume video"
+            >
             <View style={styles.thumbnailContainer}>
               {item.mediaItem.thumbnailPath ? (
                 <Image source={{ uri: item.mediaItem.thumbnailPath }} style={styles.thumbnail} />
@@ -43,7 +49,8 @@ export default function ContinueWatchingRow({ items, onPressItem }: ContinueWatc
               {item.mediaItem.title || item.mediaItem.filename}
             </Text>
           </TouchableOpacity>
-        )}
+        );
+      }}
       />
     </View>
   );

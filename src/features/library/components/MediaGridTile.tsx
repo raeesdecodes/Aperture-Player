@@ -20,12 +20,19 @@ const windowWidth = Dimensions.get('window').width;
 const TILE_WIDTH = (windowWidth - 36) / 2;
 
 export default function MediaGridTile({ item, onPress }: MediaGridTileProps) {
+  const durationText = formatDuration(item.durationMs);
+  const label = `Play video ${item.title || item.filename}, duration ${durationText}`;
+
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={() => onPress(item)}
       activeOpacity={0.8}
       testID="media-grid-tile"
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint="Double tap to start video playback"
     >
       <View style={styles.thumbnailContainer}>
         {item.thumbnailPath ? (

@@ -95,16 +95,28 @@ export default function PlayerControlsOverlay({
     <Animated.View style={[styles.overlayContainer, animatedStyle]}>
       {/* Top Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconButton} onPress={onBack} testID="back-button">
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={onBack}
+          testID="back-button"
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Back to library"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={24} color="#F5F5F7" />
         </TouchableOpacity>
-        <Text style={styles.titleText} numberOfLines={1}>
+        <Text style={styles.titleText} numberOfLines={1} accessibilityRole="header">
           {title}
         </Text>
         <TouchableOpacity
           style={styles.iconButton}
           onPress={onMoreOptions}
           testID="more-options-button"
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="More player options"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="ellipsis-vertical" size={20} color="#F5F5F7" />
         </TouchableOpacity>
@@ -120,7 +132,7 @@ export default function PlayerControlsOverlay({
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.timeRow}>
-          <Text style={styles.timeText}>
+          <Text style={styles.timeText} accessibilityLabel={`Current time ${formatTime(positionMs)} of ${formatTime(durationMs)}`}>
             {formatTime(positionMs)} / {formatTime(durationMs)}
           </Text>
           <TouchableOpacity
@@ -129,6 +141,10 @@ export default function PlayerControlsOverlay({
               gestureState.isLocked.value = true;
             }}
             testID="lock-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Lock screen controls"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="lock-open-outline" size={20} color="#F5F5F7" />
           </TouchableOpacity>
@@ -154,6 +170,10 @@ export default function PlayerControlsOverlay({
               useLibraryStore.getState().playPrevious();
             }}
             testID="play-prev-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Previous track"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-skip-back-outline" size={24} color="#F5F5F7" />
           </TouchableOpacity>
@@ -165,6 +185,10 @@ export default function PlayerControlsOverlay({
               seekRelative(-10000);
             }}
             testID="seek-back-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Seek backward 10 seconds"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-back-outline" size={22} color="#F5F5F7" />
           </TouchableOpacity>
@@ -173,6 +197,10 @@ export default function PlayerControlsOverlay({
             style={styles.playPauseButton}
             onPress={togglePlayPause}
             testID="play-pause-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={isPlaying ? 'Pause video' : 'Play video'}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons
               name={isPlaying ? 'pause-circle' : 'play-circle'}
@@ -188,6 +216,10 @@ export default function PlayerControlsOverlay({
               seekRelative(10000);
             }}
             testID="seek-forward-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Seek forward 10 seconds"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-forward-outline" size={22} color="#F5F5F7" />
           </TouchableOpacity>
@@ -199,6 +231,10 @@ export default function PlayerControlsOverlay({
               useLibraryStore.getState().playNext();
             }}
             testID="play-next-button"
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Next track"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="play-skip-forward-outline" size={24} color="#F5F5F7" />
           </TouchableOpacity>
