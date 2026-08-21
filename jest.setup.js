@@ -98,3 +98,41 @@ jest.mock('@expo/vector-icons', () => {
     Ionicons: (props) => React.createElement(Text, props, props.name),
   };
 });
+
+jest.mock(
+  'expo-sqlite',
+  () => ({
+    openDatabaseSync: jest.fn(() => ({
+      execAsync: jest.fn(),
+      runAsync: jest.fn(),
+      getFirstAsync: jest.fn(),
+      getAllAsync: jest.fn(),
+    })),
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  'expo-media-library',
+  () => ({
+    getPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+    requestPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+    getAssetsAsync: jest.fn(async () => ({ assets: [], endCursor: '', hasNextPage: false })),
+    MediaType: { VIDEO: 'video', AUDIO: 'audio' },
+  }),
+  { virtual: true },
+);
+
+jest.mock(
+  'expo-file-system/legacy',
+  () => ({
+    cacheDirectory: '/mock/cache/',
+    documentDirectory: '/mock/doc/',
+    getInfoAsync: jest.fn(async () => ({ exists: true })),
+    makeDirectoryAsync: jest.fn(async () => {}),
+    copyAsync: jest.fn(async () => {}),
+    downloadAsync: jest.fn(async () => {}),
+    deleteAsync: jest.fn(async () => {}),
+  }),
+  { virtual: true },
+);
