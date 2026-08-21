@@ -177,12 +177,26 @@ export default function GestureLayer({ children }: GestureLayerProps) {
       }
     });
 
-  // Composed Gestures: TwoFingerTap takes priority, Pinch simultaneous with Pan; Taps exclusive with Pan
+  // Long Press 2x Speed Boost Gesture
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(400)
+    .onStart(() => {
+      'worklet';
+      if (gestureState.isLocked.value) return;
+      runOnJS(usePlayerStore.getState().setPlaybackRate)(2.0);
+    })
+    .onFinalize(() => {
+      'worklet';
+      if (gestureState.isLocked.value) return;
+      runOnJS(usePlayerStore.getState().setPlaybackRate)(1.0);
+    });
+
+  // Composed Gestures: TwoFingerTap takes priority, Pinch simultaneous with Pan; Taps exclusive with Pan & LongPress
   const composedGestures = Gesture.Race(
     twoFingerTapGesture,
     Gesture.Race(
       pinchGesture,
-      Gesture.Exclusive(doubleTapGesture, singleTapGesture, panGesture),
+      Gesture.Exclusive(longPressGesture, doubleTapGesture, singleTapGesture, panGesture),
     ),
   );
 

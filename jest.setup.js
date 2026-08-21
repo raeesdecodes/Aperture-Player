@@ -84,6 +84,17 @@ jest.mock('react-native-gesture-handler', () => {
           return this;
         },
       }),
+      LongPress: () => ({
+        minDuration: function () {
+          return this;
+        },
+        onStart: function () {
+          return this;
+        },
+        onFinalize: function () {
+          return this;
+        },
+      }),
       Simultaneous: (...args) => args,
       Exclusive: (...args) => args,
       Race: (...args) => args,

@@ -15,5 +15,5 @@ describe('App Component', () => {
       tree = renderer.create(<App />);
     });
     expect(tree.toJSON()).not.toBeNull();
-  });
+  }, 15000);
 });

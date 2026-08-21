@@ -7,12 +7,14 @@ export interface PlayerStore {
   playbackState: PlaybackState;
   service: PlayerService;
   audioDelayMs: number;
+  playbackRate: number;
   setPlayerService: (service: PlayerService) => void;
   open: (uri: string) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   seekRelative: (deltaMs: number) => Promise<void>;
   setAudioDelay: (delayMs: number) => void;
+  setPlaybackRate: (rate: number) => void;
 }
 
 let activeUnsubscribe: (() => void) | null = null;
@@ -41,6 +43,7 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
     playbackState: initialPlaybackState,
     service: vlcPlayerService,
     audioDelayMs: 0,
+    playbackRate: 1.0,
 
     setPlayerService: (newService: PlayerService) => {
       subscribeToService(newService);
@@ -69,6 +72,12 @@ export const usePlayerStore = create<PlayerStore>((set, get) => {
       const clampedDelay = Math.max(-5000, Math.min(5000, delayMs));
       set({ audioDelayMs: clampedDelay });
       vlcPlayerService.setAudioDelay(clampedDelay);
+    },
+
+    setPlaybackRate: (rate: number) => {
+      const clampedRate = Math.max(0.25, Math.min(3.0, rate));
+      set({ playbackRate: clampedRate });
+      vlcPlayerService.setPlaybackRate(clampedRate);
     },
   };
 });

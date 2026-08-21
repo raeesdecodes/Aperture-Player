@@ -17,8 +17,21 @@ export class VlcPlayerService implements PlayerService {
   private currentUri: string | null = null;
   private activeSubtitleUri: string | null = null;
   private volume: number = 100;
+  private playbackRate: number = 1.0;
   private listeners: Set<(state: PlaybackState) => void> = new Set();
   private vlcPlayerRef: any = null;
+
+  public getPlaybackRate(): number {
+    return this.playbackRate;
+  }
+
+  public setPlaybackRate(rate: number): void {
+    const clampedRate = Math.max(0.25, Math.min(3.0, rate));
+    this.playbackRate = clampedRate;
+    if (this.vlcPlayerRef?.setRate) {
+      this.vlcPlayerRef.setRate(clampedRate);
+    }
+  }
 
   /**
    * Binds the active VLCPlayer component ref to this service instance.
