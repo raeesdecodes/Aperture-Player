@@ -1,5 +1,6 @@
 import { PlayerService } from '../../domain/interfaces/playerService';
 import { PlaybackState } from '../../domain/types/playbackState';
+import { detectLocalSubtitle } from './localSubtitleDetector';
 
 /**
  * Concrete implementation of PlayerService backed by react-native-vlc-media-player.
@@ -13,6 +14,7 @@ export class VlcPlayerService implements PlayerService {
   };
 
   private currentUri: string | null = null;
+  private activeSubtitleUri: string | null = null;
   private volume: number = 100;
   private listeners: Set<(state: PlaybackState) => void> = new Set();
   private vlcPlayerRef: any = null;
@@ -47,6 +49,20 @@ export class VlcPlayerService implements PlayerService {
   }
 
   /**
+   * Gets the active auto-detected or manually set subtitle URI.
+   */
+  public getActiveSubtitleUri(): string | null {
+    return this.activeSubtitleUri;
+  }
+
+  /**
+   * Sets active subtitle URI manually.
+   */
+  public setSubtitleUri(subtitleUri: string | null): void {
+    this.activeSubtitleUri = subtitleUri;
+  }
+
+  /**
    * Gets current volume (0 to 100).
    */
   public getVolume(): number {
@@ -55,6 +71,7 @@ export class VlcPlayerService implements PlayerService {
 
   public async open(uri: string): Promise<void> {
     this.currentUri = uri;
+    this.activeSubtitleUri = await detectLocalSubtitle(uri);
     this.updateState({
       positionMs: 0,
       durationMs: 0,
