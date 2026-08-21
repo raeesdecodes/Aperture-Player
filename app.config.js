@@ -35,6 +35,14 @@ module.exports = {
           permissions: ['READ_EXTERNAL_STORAGE', 'READ_MEDIA_VIDEO', 'READ_MEDIA_AUDIO'],
         },
       ],
+      [
+        'expo-build-properties',
+        {
+          android: {
+            minSdkVersion: 26,
+          },
+        },
+      ],
     ],
     extra: {
       eas: {
