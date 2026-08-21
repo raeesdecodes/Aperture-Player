@@ -26,5 +26,10 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [],
+    extra: {
+      eas: {
+        projectId: 'cff8213e-3006-4eb6-8525-fecd8cf439d6',
+      },
+    },
   },
 };
