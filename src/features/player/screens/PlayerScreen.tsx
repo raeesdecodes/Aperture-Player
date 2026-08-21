@@ -6,6 +6,7 @@ import { usePlayerStore } from '../../../store/usePlayerStore';
 import { vlcPlayerService } from '../../../data/services/vlcPlayerService';
 
 import GestureLayer from '../components/GestureLayer';
+import VolumeBrightnessIndicator from '../components/VolumeBrightnessIndicator';
 
 interface PlayerScreenProps {
   uri?: string;
@@ -93,6 +94,7 @@ export default function PlayerScreen({ uri = DEFAULT_SAMPLE_URI }: PlayerScreenP
           onBuffering={handleBuffering}
           autoplay={true}
         />
+        <VolumeBrightnessIndicator />
       </GestureLayer>
 
       <View style={styles.controlsContainer}>
