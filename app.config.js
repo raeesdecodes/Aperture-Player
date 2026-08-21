@@ -29,6 +29,7 @@ module.exports = {
     plugins: [
       'react-native-vlc-media-player',
       'expo-sqlite',
+      'react-native-track-player',
       [
         'expo-media-library',
         {
