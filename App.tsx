@@ -33,6 +33,7 @@ export default function App() {
               <LibraryHomeScreen
                 onSelectMedia={handleSelectMedia}
                 onOpenSettings={() => setViewMode('settings')}
+                onOpenMusic={() => setActiveTab('music')}
               />
             )}
             {activeTab === 'music' && (

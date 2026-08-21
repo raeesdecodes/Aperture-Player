@@ -9,21 +9,33 @@ import {
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLibraryStore } from '../../../store/useLibraryStore';
 import MediaGridTile from '../components/MediaGridTile';
 import ContinueWatchingRow from '../components/ContinueWatchingRow';
+import QuickToolsBar from '../components/QuickToolsBar';
+import PrivateVaultModal from '../../vault/components/PrivateVaultModal';
+import NetworkStreamModal from '../../network/components/NetworkStreamModal';
+import PlaylistManagerModal from '../../playlists/components/PlaylistManagerModal';
+import StatusSaverModal from '../../statusSaver/components/StatusSaverModal';
+import RecycleBinModal from '../../recycleBin/components/RecycleBinModal';
 import { MediaItemSchema } from '../../../data/db/schema/mediaItems';
 
 interface LibraryHomeScreenProps {
   onSelectMedia?: (mediaItem: MediaItemSchema) => void;
   onOpenSettings?: () => void;
+  onOpenMusic?: () => void;
 }
 
 type SortBy = 'date' | 'name' | 'duration';
 
-export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: LibraryHomeScreenProps) {
+export default function LibraryHomeScreen({
+  onSelectMedia,
+  onOpenSettings,
+  onOpenMusic,
+}: LibraryHomeScreenProps) {
   const {
     mediaItemsList,
     continueWatchingList,
@@ -35,6 +47,12 @@ export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: Lib
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('date');
+
+  const [privateVaultVisible, setPrivateVaultVisible] = useState(false);
+  const [urlStreamVisible, setUrlStreamVisible] = useState(false);
+  const [playlistsVisible, setPlaylistsVisible] = useState(false);
+  const [statusSaverVisible, setStatusSaverVisible] = useState(false);
+  const [recycleBinVisible, setRecycleBinVisible] = useState(false);
 
   useEffect(() => {
     fetchLibrary();
@@ -58,7 +76,6 @@ export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: Lib
       if (sortBy === 'duration') {
         return (b.durationMs || 0) - (a.durationMs || 0);
       }
-      // default date
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
 
@@ -70,6 +87,24 @@ export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: Lib
     useLibraryStore.getState().setQueue(filteredAndSortedMedia, index >= 0 ? index : 0);
     if (onSelectMedia) {
       onSelectMedia(item);
+    }
+  };
+
+  const handlePlayNetworkStream = (url: string) => {
+    const streamItem: MediaItemSchema = {
+      id: `stream-${Date.now()}`,
+      uri: url,
+      filename: url,
+      title: 'Network Stream',
+      durationMs: 0,
+      sizeBytes: 0,
+      mimeType: 'video/*',
+      thumbnailPath: null,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    if (onSelectMedia) {
+      onSelectMedia(streamItem);
     }
   };
 
@@ -116,6 +151,18 @@ export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: Lib
           </Text>
         </View>
       )}
+
+      {/* Top Quick Tools Bar */}
+      <QuickToolsBar
+        onOpenMusic={onOpenMusic || (() => {})}
+        onOpenPrivateVault={() => setPrivateVaultVisible(true)}
+        onOpenUrlStream={() => setUrlStreamVisible(true)}
+        onOpenPlaylists={() => setPlaylistsVisible(true)}
+        onOpenStatusSaver={() => setStatusSaverVisible(true)}
+        onOpenRecycleBin={() => setRecycleBinVisible(true)}
+        onOpenFileBrowser={() => Alert.alert('Folders View', 'Showing local device folders.')}
+        onOpenCloudDrive={() => Alert.alert('Cloud Drive', 'Connect your Cloud Drive account.')}
+      />
 
       {/* Search Input Bar */}
       <View style={styles.searchBar}>
@@ -194,6 +241,33 @@ export default function LibraryHomeScreen({ onSelectMedia, onOpenSettings }: Lib
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => <MediaGridTile item={item} onPress={handlePressMedia} />}
       />
+
+      {/* Tool Modals */}
+      <PrivateVaultModal
+        visible={privateVaultVisible}
+        onClose={() => setPrivateVaultVisible(false)}
+      />
+
+      <NetworkStreamModal
+        visible={urlStreamVisible}
+        onClose={() => setUrlStreamVisible(false)}
+        onPlayStream={handlePlayNetworkStream}
+      />
+
+      <PlaylistManagerModal
+        visible={playlistsVisible}
+        onClose={() => setPlaylistsVisible(false)}
+      />
+
+      <StatusSaverModal
+        visible={statusSaverVisible}
+        onClose={() => setStatusSaverVisible(false)}
+      />
+
+      <RecycleBinModal
+        visible={recycleBinVisible}
+        onClose={() => setRecycleBinVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -212,7 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 14,
+    paddingBottom: 10,
   },
   headerTitle: {
     color: '#F5F5F7',
