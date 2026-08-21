@@ -21,11 +21,21 @@ module.exports = {
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundColor: '#0E0E10',
       },
+      permissions: ['READ_MEDIA_VIDEO', 'READ_MEDIA_AUDIO', 'READ_EXTERNAL_STORAGE'],
     },
     web: {
       favicon: './assets/favicon.png',
     },
-    plugins: ['react-native-vlc-media-player', 'expo-sqlite'],
+    plugins: [
+      'react-native-vlc-media-player',
+      'expo-sqlite',
+      [
+        'expo-media-library',
+        {
+          permissions: ['READ_EXTERNAL_STORAGE', 'READ_MEDIA_VIDEO', 'READ_MEDIA_AUDIO'],
+        },
+      ],
+    ],
     extra: {
       eas: {
         projectId: 'cff8213e-3006-4eb6-8525-fecd8cf439d6',
